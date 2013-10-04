@@ -1,3 +1,28 @@
+//
+// The MIT License (MIT)
+//
+//
+// Copyright (c) 2013 OANDA Corporation
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+// IN THE SOFTWARE.
+//
+
 #ifndef FIXED_FIRST_BIT_SET_H
 #define FIXED_FIRST_BIT_SET_H
 
@@ -9,10 +34,11 @@
 namespace fixed {
 
 //
-// NOTE, the values returned range from 0 to 64 for 64bit values, and
-//       0 to 128 for 128 bit values.  The value of 0 means no bit was
-//       actually set, and 1 means the 1st (lowest) bit, with 64 and 128
-//       representing the max bit (highest) respectively.
+// NOTE
+//   The values returned range from 0 to 64 for 64bit values, and 0 to 128 for
+//   128 bit values.  The value of 0 means no bit was actually set, and 1 means
+//   the 1st (lowest) bit, with 64 and 128 representing the max bit (highest)
+//   respectively.
 //
 class FirstBitSet {
   public:
@@ -24,8 +50,8 @@ class FirstBitSet {
     unsigned int operator() (const __uint128_t val) const noexcept;
 
     //
-    // These two are provided so FixedNumber can build a constexpr table,
-    // they should not be used by runtime code, slower!!
+    // These two are provided for compile time support, they should not be used
+    // by runtime code, will be much slower!!
     //
     static constexpr unsigned int findConstExpr (int64_t val) noexcept;
 
@@ -36,20 +62,8 @@ class FirstBitSet {
     ) noexcept;
 
     //
-    // The max bit position that can be set to be able to store a signed
-    // int in a int64_t
-    //
-    static const unsigned int MAX_INT64_BIT_POS = 63;
-
-    //
-    // The max bit position that can be set to be able to store a signed
-    // int in a int128_t
-    //
-    static const unsigned int MAX_INT128_BIT_POS = 127;
-
-    //
-    // Note, by making this constexpr, uses of this call will resolve
-    // to a compile time constant.
+    // Note, by making this constexpr, uses of this call will resolve to a
+    // compile time constant.
     //
     template <typename T>
     static constexpr unsigned int maxBitPos () noexcept;
@@ -75,7 +89,7 @@ template <typename T>
 inline constexpr unsigned int FirstBitSet::maxBitPos () noexcept
 {
     static_assert (
-        std::is_signed<__int128_t>::value,
+        std::numeric_limits<__int128_t>::is_specialized,
         "Need to compile with -std=c++11 -U__STRICT_ANSI__ "
         "in order to get __int128_t type_trait and numeric_limits support"
     );
