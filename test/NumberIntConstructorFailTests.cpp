@@ -15,12 +15,12 @@ class ConstructorFailTest {
         T intVal,
         uint64_t fracVal,
         uint8_t dp,
-        bool negativeFlag
+        Number::Sign sign
     )
       : intVal_ (intVal),
         fracVal_ (fracVal),
         dp_ (dp),
-        negativeFlag_ (negativeFlag),
+        sign_ (sign),
         strVal_ (""),
         useStringTest_ (false)
     {
@@ -32,7 +32,7 @@ class ConstructorFailTest {
       : intVal_ (0),
         fracVal_ (0),
         dp_ (0),
-        negativeFlag_ (false),
+        sign_ (Number::Sign::POSITIVE),
         strVal_ (strVal),
         useStringTest_ (true)
     {
@@ -51,7 +51,7 @@ class ConstructorFailTest {
             }
             else
             {
-                Number n (intVal_, fracVal_, dp_, negativeFlag_);
+                Number n (intVal_, fracVal_, dp_, sign_);
 
                 std::cerr << "Error, value constructor expected exception for "
                           << n.toString ()
@@ -71,7 +71,7 @@ class ConstructorFailTest {
     T intVal_;
     uint64_t fracVal_;
     unsigned int dp_;
-    bool negativeFlag_;
+    Number::Sign sign_;
     std::string strVal_;
     bool useStringTest_;
 };
@@ -81,12 +81,12 @@ constexpr Test createTest (
     const T intVal,
     const uint64_t fracVal,
     const uint8_t dp,
-    const bool negativeFlag,
+    const Number::Sign sign,
     const std::string& testName
 )
 {
     return Test (
-        ConstructorFailTest<T> (intVal, fracVal, dp, negativeFlag),
+        ConstructorFailTest<T> (intVal, fracVal, dp, sign),
         TestName (testName)
     );
 }
@@ -99,8 +99,8 @@ Test createTest (const std::string& strVal)
     );
 }
 
-static const bool NEG = true;
-static const bool POS = ! NEG;
+static const Number::Sign NEG = Number::Sign::NEGATIVE;
+static const Number::Sign POS = Number::Sign::POSITIVE;
 
 std::vector<Test> NumberIntConstructorFailTestVec = {
     createTest (9223372036854775808ULL, 0, 0, POS, "2^63"),

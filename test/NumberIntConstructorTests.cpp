@@ -15,15 +15,15 @@ class ConstructorTest {
         T intVal,
         uint64_t fracVal,
         uint8_t dp,
-        bool negativeFlag,
+        Number::Sign sign,
         const std::string& strVal,
         const bool expectedVal64Set
     )
       : intVal_(intVal),
         fracVal_(fracVal),
         dp_(dp),
-        negativeFlag_(negativeFlag),
-        expectedNegative_(negativeFlag),
+        sign_(sign),
+        expectedNegative_(sign == Number::Sign::NEGATIVE),
         strVal_(strVal),
         expectedVal64Set_ (expectedVal64Set),
         expectedIntVal_ (0),
@@ -49,7 +49,9 @@ class ConstructorTest {
         // Means it was called with the defaults, try calling the Number
         // constructor with just the intval set, so it too using the defaults
         //
-        doIntConstructor_ = fracVal == 0 && dp == 0 && ! negativeFlag;
+        doIntConstructor_ = (
+            fracVal == 0 && dp == 0 && sign_ == Number::Sign::POSITIVE
+        );
     }
 
     bool operator() ()
@@ -76,7 +78,7 @@ class ConstructorTest {
             &&
             checkNumber (
                 "Full Constructor ",
-                Number (intVal_, fracVal_, dp_, negativeFlag_),
+                Number (intVal_, fracVal_, dp_, sign_),
                 strVal_,
                 expectedIntVal_,
                 fracVal_,
@@ -102,7 +104,7 @@ class ConstructorTest {
     T intVal_;
     uint64_t fracVal_;
     unsigned int dp_;
-    bool negativeFlag_;
+    Number::Sign sign_;
     bool expectedNegative_;
     std::string strVal_;
     uint64_t expectedVal64Set_;
@@ -116,12 +118,12 @@ constexpr ConstructorTest<T> createConstructorTest (
     const T intVal,
     const uint64_t fracVal,
     const uint8_t dp,
-    const bool negativeFlag,
+    const Number::Sign sign,
     const bool val64Set
 )
 {
     return ConstructorTest<T> (
-        intVal, fracVal, dp, negativeFlag, strVal, val64Set
+        intVal, fracVal, dp, sign, strVal, val64Set
     );
 }
 
@@ -131,20 +133,20 @@ constexpr Test createTest (
     const T intVal,
     const uint64_t fracVal,
     const uint8_t dp,
-    const bool negativeFlag,
+    const Number::Sign sign,
     const bool val64Set
 )
 {
     return Test (
         createConstructorTest (
-            strVal, intVal, fracVal, dp, negativeFlag, val64Set
+            strVal, intVal, fracVal, dp, sign, val64Set
         ),
         TestName (strVal)
     );
 }
 
-static const bool NEG = true;
-static const bool POS = ! NEG;
+static const Number::Sign NEG = Number::Sign::NEGATIVE;
+static const Number::Sign POS = Number::Sign::POSITIVE;
 
 static const bool V64 = true;
 static const bool V128 = ! V64;

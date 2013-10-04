@@ -25,10 +25,10 @@
 //
 // -9223372036854775807.99999999999999
 //
-// The integer magnitude there is 2^63 - 1, so we support upto a full int64_t
-// for integer numbers and upto 14 decimal places.  If the results of any
-// additions, subtractions or multiplications would cause us to have a larger
-// integer value a fixed::OverflowException will be thrown.
+// The integer magnitude there is 2^63 - 1, and the number of decimal places is
+// 14.  If the results of any additions, subtractions or multiplications would
+// cause us to have a larger integer value a fixed::OverflowException will be
+// thrown.
 //
 // When doing multiplication, internally we may have to lower the precision on
 // the factors in order have room to store the results.  When doing division
@@ -72,6 +72,11 @@ namespace fixed {
 
 class Number {
   public:
+    enum class Sign {
+        NEGATIVE = 0,
+        POSITIVE
+    };
+
     //
     // IMPORTANT, if fractionalValue is non-zero, then decimalPlaces must also
     // be non-zero; otherwise the validation check will fail and an exception
@@ -94,7 +99,7 @@ class Number {
         const T& integerValue,
         const uint64_t fractionalValue = 0,
         const unsigned int decimalPlaces = 0,
-        bool negativeFlag = false
+        Sign sign = Sign::POSITIVE
     );
 
     //
@@ -140,7 +145,7 @@ class Number {
     );
 
     //
-    // We'll ensure the default constructor can't throw an exception.
+    // The default constructor can't throw an exception.
     //
     Number () noexcept;
 
@@ -249,7 +254,7 @@ class Number {
         const T& integerValue,
         const uint64_t fractionalValue,
         const unsigned int decimalPlaces,
-        const bool negativeFlag
+        const Sign sign
     ) noexcept;
 
     //
@@ -440,7 +445,7 @@ class Number {
         const uint64_t integerValue,
         const uint64_t fractionalValue,
         const unsigned int decimalPlaces,
-        const bool negativeFlag
+        const Sign sign
     );
 
     template <typename T>
@@ -448,7 +453,7 @@ class Number {
         const uint64_t integerValue,
         const uint64_t fractionalValue,
         const unsigned int decimalPlaces,
-        const bool negativeFlag,
+        const Sign sign,
         T& value
     );
 
@@ -560,7 +565,7 @@ class Number {
     unsigned long long convertStrToVal (
         const char* cptr,
         char*& endptr,
-        bool& negativeFlag,
+        Sign& sign,
         const std::string& errMsgHeader
     );
 
@@ -711,7 +716,7 @@ inline Number::Number (
     const T& integerValueT,
     const uint64_t fractionalValue,
     const unsigned int decimalPlaces,
-    bool negativeFlag
+    Sign sign
 )
   : multPrecisionPolicy_ (defaultMultPrecisionPolicy_),
     divPrecisionPolicy_ (defaultDivPrecisionPolicy_),
@@ -730,7 +735,7 @@ inline Number::Number (
             integerValueT,
             fractionalValue,
             decimalPlaces,
-            negativeFlag
+            sign
           )
        )
     {
@@ -749,7 +754,7 @@ inline Number::Number (
         //
         if (isNegative (integerValueT))
         {
-            negativeFlag = true;
+            sign = Sign::NEGATIVE;
         }
     }
     else
@@ -757,7 +762,7 @@ inline Number::Number (
         integerValue = static_cast<uint64_t> (integerValueT);
     }
 
-    initSetValue (integerValue, fractionalValue, decimalPlaces, negativeFlag);
+    initSetValue (integerValue, fractionalValue, decimalPlaces, sign);
 }
 
 inline Number::Number (
@@ -836,7 +841,7 @@ inline Number::Number (
         static_cast<uint64_t> (intPart),
         static_cast<uint64_t> (fractPart * shiftTable64_[decimalPlaces_].value),
         MAX_DECIMAL_PLACES,
-        val < 0.0
+        (val < 0.0) ? Sign::NEGATIVE : Sign::POSITIVE
     );
 
 
@@ -871,7 +876,7 @@ bool Number::validate (
     const T& integerValue,
     const uint64_t fractionalValue,
     const unsigned int decimalPlaces,
-    const bool negativeFlag
+    const Sign sign
 ) noexcept
 {
     static_assert (
@@ -880,12 +885,8 @@ bool Number::validate (
         "for the integer value."
     );
 
-    uint64_t intVal = std::is_signed<T>::value ?
-                        absoluteValue<uint64_t> (integerValue) :
-                        integerValue;
-
     return (
-        (intVal <= MAX_INTEGER_VALUE) &&
+        (absoluteValue<uint64_t> (integerValue) <= MAX_INTEGER_VALUE) &&
         (decimalPlaces <= MAX_DECIMAL_PLACES) &&
         (fractionalValue <
             static_cast<uint64_t> (shiftTable64_[decimalPlaces].value))
@@ -896,7 +897,7 @@ inline void Number::initSetValue (
     const uint64_t integerValue,
     const uint64_t fractionalValue,
     const unsigned int decimalPlaces,
-    const bool negativeFlag
+    const Sign sign
 )
 {
     unsigned int bitsSum =
@@ -908,15 +909,15 @@ inline void Number::initSetValue (
             integerValue,
             fractionalValue,
             decimalPlaces,
-            negativeFlag,
+            sign,
             value128_
         );
 
         value64Set_ = false;
 
         //
-        // The heuristic for the overflow is not exact, once we've done it
-        // it's possible we could still fit in a 64 bit...
+        // The heuristic for the overflow is not exact, once we've done it it's
+        // possible we could still fit in a 64 bit...
         //
         valueAutoResize ();
     }
@@ -926,7 +927,7 @@ inline void Number::initSetValue (
             integerValue,
             fractionalValue,
             decimalPlaces,
-            negativeFlag,
+            sign,
             value64_
         );
 
@@ -939,7 +940,7 @@ inline void Number::setValue (
     const uint64_t integerValue,
     const uint64_t fractionalValue,
     const unsigned int decimalPlaces,
-    const bool negativeFlag,
+    const Sign sign,
     T& value
 )
 {
@@ -947,9 +948,9 @@ inline void Number::setValue (
     value *= shiftTable64_[decimalPlaces].value;
     value += fractionalValue;
 
-    if (negativeFlag)
+    if (sign == Sign::NEGATIVE)
     {
-        value = 0 - value;
+        value = - value;
     }
 }
 
@@ -976,7 +977,7 @@ inline uint64_t Number::integerValue (
     // that would cause it to be larger will cause an overflow exception.
     //
     return isNegative<T> (intVal) ?
-           static_cast<uint64_t> (0 - intVal) :
+           static_cast<uint64_t> (- intVal) :
            static_cast<uint64_t> (intVal)
     ;
 }
@@ -1121,7 +1122,9 @@ inline void Number::setDivPrecisionPolicy (
     divPrecisionPolicy_ = policy;
 }
 
-inline void Number::setDefaultRoundingMode (const Rounding::Mode& mode) noexcept
+inline void Number::setDefaultRoundingMode (
+    const Rounding::Mode& mode
+) noexcept
 {
     defaultRoundingMode_ = mode;
 }

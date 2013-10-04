@@ -6,10 +6,6 @@
 #include <cassert>
 #include <cstdlib>
 #include <ostream>
-#include <stack>
-#include <vector>
-
-#include <iostream>
 
 namespace fixed {
 
@@ -30,12 +26,12 @@ Rounding::Mode Number::defaultRoundingMode_ = DEFAULT_ROUNDING_MODE;
 //
 // Notes on the static check on fundamentalAssumptions and on
 // MAX_DECIMAL_PLACES and MAX_INTEGER_VALUE.  Parts of the code were written
-// with these assumptions in mind, certain checks don't need to be performed
-// etc.
+// with these assumptions in mind, meaning certain checks in the code don't
+// need to be performed etc.
 //
 // The values intially chosen for these of 18 and max value of a uint64_t
 // respectively work out nicely.  When needed we'll use up to a __int128_t
-// representation. So the max magnitude number we can store is 127 bits (since
+// representation. The max magnitude number we can store is 127 bits (since
 // we're using signed 128).  18 for max decimal places requires no more than 60
 // bits to store, and coupled with the max unsigned integer value of 64 bits,
 // adding 1 for the signed bit, all valid internal values will require 125 bits
@@ -56,16 +52,17 @@ Rounding::Mode Number::defaultRoundingMode_ = DEFAULT_ROUNDING_MODE;
 //
 // The extra check for MAX_INTEGER_VALUE >= int64::max means we don't have to
 // check for integer overflow on results of operations that still fit in an
-// int64_t.
+// int64_t.  This is because even with a decimal places of 0, a result that
+// fits in int64_t can't be > MAX_INTEGER_VALUE.
 //
-// MAX_DECIMAL_PLACES check on ShiftTable<int64>::MAX_DECIMAL_PLACES is because
-// there's an assumption that all decimal places <= MAX_DECIMAL_PLACES can
-// be used to index into shiftTable64_
+// MAX_DECIMAL_PLACES check on ShiftTable<int64>::MAX_DIGITS is because there's
+// an assumption that all decimal places <= MAX_DECIMAL_PLACES can be used to
+// index into shiftTable64_
 //
-// The 2 * MAX_DECIMAL_PLACES <= ShiftTable<int128_t>::MAX_DECIMAL_PLACES is
-// because the worst case decimal places for the result of a multiplication
-// is 2 * MAX_DECIMAL_PLACES, and we need to ensure we can index into
-// shiftTable128_ with this.
+// The 2 * MAX_DECIMAL_PLACES <= ShiftTable<int128_t>::MAX_DIGITS is because
+// the worst case decimal places for the result of a multiplication is 2 *
+// MAX_DECIMAL_PLACES, and we need to ensure we can index into shiftTable128_
+// with this.
 //
 static constexpr bool fundamentalAssumptions ()
 {
@@ -102,14 +99,14 @@ Number::Number (const char* numberCStr)
 {
     const char* cptr = numberCStr;
 
-    bool integerNeg = false;
+    Sign numberSign = Sign::POSITIVE;
     unsigned long long integerValue = 0;
     unsigned long long fractionalValue = 0;
 
     char* endptr;
 
     integerValue = convertStrToVal (
-        cptr, endptr, integerNeg, "Number::Number (str) IntegerValue "
+        cptr, endptr, numberSign, "Number::Number (str) IntegerValue "
     );
 
     if (*endptr == '.')
@@ -124,10 +121,10 @@ Number::Number (const char* numberCStr)
             );
         }
 
-        bool fracNeg = false;
+        Sign fracSign = Sign::POSITIVE;
 
         fractionalValue = convertStrToVal (
-            cptr, endptr, fracNeg, "Number::Number (str) FractionalValue "
+            cptr, endptr, fracSign, "Number::Number (str) FractionalValue "
         );
 
         decimalPlaces_ = static_cast<uint8_t> (endptr - cptr);
@@ -158,7 +155,7 @@ Number::Number (const char* numberCStr)
         static_cast<uint64_t> (integerValue),
         fractionalValue,
         decimalPlaces (),
-        integerNeg
+        numberSign
     );
 }
 
@@ -1315,7 +1312,7 @@ const Number operator% (const Number& lhs, const Number& rhs)
 unsigned long long Number::convertStrToVal (
     const char* cptr,
     char*& endptr,
-    bool& negativeFlag,
+    Sign& sign,
     const std::string& errMsgHeader
 )
 {
@@ -1326,7 +1323,7 @@ unsigned long long Number::convertStrToVal (
 
     unsigned long long value;
 
-    negativeFlag = false;
+    sign = Sign::POSITIVE;
 
     if (cptr[0] == '+')
     {
@@ -1335,7 +1332,7 @@ unsigned long long Number::convertStrToVal (
 
     if (cptr[0] == '-')
     {
-        negativeFlag = true;
+        sign = Sign::NEGATIVE;
         ++cptr;
     }
 
