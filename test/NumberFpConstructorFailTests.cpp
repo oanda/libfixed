@@ -1,9 +1,9 @@
 #include "fixed/Number.h"
 #include "TestsCommon.h"
 
+#include <cmath>
 #include <iostream>
 #include <vector>
-#include <unordered_map>
 
 namespace fixed {
 namespace test {
@@ -65,7 +65,20 @@ std::vector<Test> NumberFpConstructorFailTestVec = {
 
     createTest (-18446744073709551615.000f, "-2^64-1"),
     createTest (-18446744073709551615.000, "-2^64-1"),
-    createTest (-18446744073709551615.000L, "-2^64-1")
+    createTest (-18446744073709551615.000L, "-2^64-1"),
+
+    createTest (static_cast<float> (std::nan ("")), "float nan"),
+    createTest (static_cast<double> (std::nan ("")), "double nan"),
+    createTest (static_cast<long double> (std::nan ("")), "long double nan"),
+
+    createTest (static_cast<float> (INFINITY),  "float +inf"),
+    createTest (static_cast<float> (-INFINITY), "float -inf"),
+
+    createTest (static_cast<double> (INFINITY),  "double +inf"),
+    createTest (static_cast<double> (-INFINITY), "double -inf"),
+
+    createTest (static_cast<long double> (INFINITY),  "long double +inf"),
+    createTest (static_cast<long double> (-INFINITY), "long double -inf")
 };
 
 } // namespace test

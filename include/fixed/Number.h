@@ -8,7 +8,6 @@
 #include "fixed/Rounding.h"
 #include "fixed/ShiftTable.h"
 
-#include <array>
 #include <cstdint>
 #include <cmath>
 #include <functional>
@@ -38,14 +37,35 @@
 //
 // Here are two extreme examples to illustrate what this means:
 //
+// E.g. 1
+//
 // 123456789012.12345678901234 * 74709314.17104198834225
 //
-//   True result, rounded to 14 decimal places
+//   True result, rounded to 14 decimal places:
+//
 //     9223372036854775806.99899284895878
 //
 //   In practice, what this library does is the following multiplication:
+//
 //     123456789012.12345679 * 74709314.17104198834
 //       = 9223372036854775806.79500247491567
+//
+// E.g. 2
+//
+// 3676299675362152112.41203440812031 / 0.39858520947355
+//
+//   True result, rounded to 14 decimal places
+//
+//     9223372036854544405.23297216736970
+//
+//   In practice, this library can only offer up to 5 decimal places of
+//   precision in this case:
+//
+//     9223372036854544405.23297
+//
+// These limitations only come into play when dealing with large numbers, in
+// the context of normal values used in financial settings they shouldn't pose
+// a real concern.
 //
 
 namespace fixed {
@@ -86,15 +106,20 @@ class Number {
     // places required to accurately store the number will be used.  This means
     // any excess 0's at the end of the number will be trimmed if possible.
     // However if decimalPlaces is provided that will be the decimal places in
-    // use.
+    // use.  If a decimalPlaces larger than MAX_DECIMAL_PLACES is passed in
+    // this is considered the same as not specifying the desired decimal places
+    // and then the min decimal places required will be used.
+    //
+    //
+    // NOTE: Numbers that are smaller than our minimum representable value
+    //       will simply result in a Number of 0.  The method isZero () can
+    //       be queried to check for this after the fact.
     //
     // A fixed::BadValueException will be thrown in the following cases:
-
-    // The floating point constructors will throw a BadValueException if the
-    // magnitude of the integer part of the value passed in exceeds
-    // MAX_INTEGER_VALUE.  If the decimalPlaces passed in exceeds
-    // MAX_DECIMAL_PLACES, then MAX_DECIMAL_PLACES will simply be used, no
-    // exception will be thrown in this case.
+    //   - The magnitude of the integer part of the value passed in exceeds
+    //     MAX_INTEGER_VALUE.
+    //   - The value passed in is an 'infinite' type.
+    //   - The value passed in is NaN.
     //
     explicit Number (
         const float val,
@@ -765,6 +790,20 @@ inline Number::Number (
     value64Set_ (true),
     value64_ (0)
 {
+    if (std::isnan (val))
+    {
+        throw fixed::BadValueException (
+            "Floating point constructor value is not a number"
+        );
+    }
+
+    if (std::isinf (val))
+    {
+        throw fixed::BadValueException (
+            "Floating point constructor value is + or - infinity"
+        );
+    }
+
     bool minimizeDps = false;
 
     if (decimalPlaces > MAX_DECIMAL_PLACES)
