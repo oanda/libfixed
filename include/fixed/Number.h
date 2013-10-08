@@ -317,6 +317,8 @@ class Number {
     //
     unsigned int decimalPlaces () const noexcept;
 
+    Sign sign () const noexcept;
+
     //
     // Returns true if the Number is negative, false otherwise.
     //
@@ -1033,6 +1035,11 @@ inline uint64_t Number::fractionalValue (const T& val) const noexcept
 inline unsigned int Number::decimalPlaces () const noexcept
 {
     return static_cast<unsigned int> (decimalPlaces_);
+}
+
+inline Number::Sign Number::sign () const noexcept
+{
+    return isNegative () ? Sign::NEGATIVE : Sign::POSITIVE;
 }
 
 inline bool Number::isNegative () const noexcept
