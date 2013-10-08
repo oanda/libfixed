@@ -48,7 +48,7 @@ const Rounding::RunTimeModeStringsCheck Rounding::runTimeModeStringsCheck_;
 
 template <typename T>
 static T roundDownAdjustment (
-    const T& integerVal,
+    const T&, // integerVal
     const T& decimalVal,
     const T&, // halfRangeVal
     const bool negativeFlag
@@ -64,7 +64,7 @@ static T roundDownAdjustment (
 
 template <typename T>
 static T roundUpAdjustment (
-    const T& integerVal,
+    const T&, // integerVal
     const T& decimalVal,
     const T&, // halfRangeVal
     const bool negativeFlag
@@ -91,7 +91,7 @@ static T roundTowardsZeroAdjustment (
 
 template <typename T>
 static T roundAwayFromZeroAdjustment (
-    const T& integerVal,
+    const T&, // integerVal
     const T& decimalVal,
     const T&, // halfRangeVal
     const bool negativeFlag
@@ -107,7 +107,7 @@ static T roundAwayFromZeroAdjustment (
 
 template <typename T>
 static T roundToNearestHalfUpAdjustment (
-    const T& integerVal,
+    const T&, // integerVal
     const T& decimalVal,
     const T& halfRangeVal,
     const bool negativeFlag
@@ -133,7 +133,7 @@ static T roundToNearestHalfUpAdjustment (
 
 template <typename T>
 static T roundToNearestHalfDownAdjustment (
-    const T& integerVal,
+    const T&, // integerVal
     const T& decimalVal,
     const T& halfRangeVal,
     const bool negativeFlag
@@ -159,7 +159,7 @@ static T roundToNearestHalfDownAdjustment (
 
 template <typename T>
 static T roundToNearestHalfAwayFromZeroAdjustment (
-    const T& integerVal,
+    const T&, // integerVal
     const T& decimalVal,
     const T& halfRangeVal,
     const bool negativeFlag
@@ -185,7 +185,7 @@ static T roundToNearestHalfAwayFromZeroAdjustment (
 
 template <typename T>
 static T roundToNearestHalfTowardsZeroAdjustment (
-    const T& integerVal,
+    const T&, // integerVal
     const T& decimalVal,
     const T& halfRangeVal,
     const bool negativeFlag

@@ -66,7 +66,7 @@ static std::vector<TestVec> testVecs = {
 } // namespace test
 } // namespace fixed
 
-int main (int argc, char* argv[], char* envp[])
+int main ()
 {
     std::cout << "Beginning Fixed Number library tests." << std::endl;
 

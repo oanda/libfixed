@@ -903,7 +903,7 @@ bool Number::validate (
     const T& integerValue,
     const uint64_t fractionalValue,
     const unsigned int decimalPlaces,
-    const Sign sign
+    const Sign // sign
 ) noexcept
 {
     static_assert (

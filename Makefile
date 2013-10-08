@@ -53,7 +53,7 @@ TEST_OBJ := $(patsubst test/%,$(BUILD_OUTDIR)/%,$(TEST_SRC:.cpp=.o))
 
 CXX ?= g++
 
-WARN_FLAGS ?= -Wall -Werror
+WARN_FLAGS ?= -Wall -Wextra -Werror
 DEBUG_FLAGS ?= -ggdb
 OPTIMIZATION_FLAGS ?= -O3
 ARCH_FLAGS ?= -m64
