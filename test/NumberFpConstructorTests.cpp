@@ -82,7 +82,7 @@ class ConstructorTest {
         return
             checkNumber (
                 name,
-                Number (floatVal_, dp_),
+                Number::floatingPoint (floatVal_, dp_),
                 expectedStrVal_,
                 expectedIntVal_,
                 expectedFracVal_,

@@ -44,7 +44,7 @@ class ConstructorFailTest {
     bool operator() ()
     {
         try {
-            Number n (floatVal_);
+            Number n = Number::floatingPoint (floatVal_);
 
             std::cerr << "Error, value constructor expected exception for "
                       << n.toString ()

@@ -128,9 +128,10 @@ class Number {
     );
 
     //
-    // Constructors taking in a float, double and long double are also
-    // provided, however if possible the earlier version passing in an integral
-    // type should be preferred as it provides more accuracy.
+    // A 'named' constructor for creating a Number from a floating point value.
+    // This is provided for convenience, the main constructor should be used
+    // when possible as it provides more accuracy for the Number
+    // representation.
     //
     // If the desired decimalPlaces are not specified, then the min decimal
     // places required to accurately store the number will be used.  This means
@@ -151,20 +152,9 @@ class Number {
     //   - The value passed in is an 'infinite' type.
     //   - The value passed in is NaN.
     //
-    explicit Number (
-        const float val,
-        unsigned int decimalPlaces = (MAX_DECIMAL_PLACES + 1),
-        Rounding::Mode roundingMode = defaultRoundingMode_
-    );
-
-    explicit Number (
-        const double val,
-        unsigned int decimalPlaces = (MAX_DECIMAL_PLACES + 1),
-        Rounding::Mode roundingMode = defaultRoundingMode_
-    );
-
-    explicit Number (
-        const long double val,
+    template <typename T>
+    static Number floatingPoint (
+        const T& floatingPointValue,
         unsigned int decimalPlaces = (MAX_DECIMAL_PLACES + 1),
         Rounding::Mode roundingMode = defaultRoundingMode_
     );
@@ -792,36 +782,20 @@ inline Number::Number (
     initSetValue (integerValue, fractionalValue, decimalPlaces, sign);
 }
 
-inline Number::Number (
-    const float val,
+template <typename T>
+inline Number Number::floatingPoint (
+    const T& floatingPointValue,
     unsigned int decimalPlaces,
     Rounding::Mode roundingMode
 )
-  : Number (static_cast<long double> (val), decimalPlaces, roundingMode)
 {
-}
+    static_assert (
+        std::is_floating_point<T>::value,
+        "This method is only expected to be invoked with a floating point type"
+    );
 
-inline Number::Number (
-    const double val,
-    unsigned int decimalPlaces,
-    Rounding::Mode roundingMode
-)
-  : Number (static_cast<long double> (val), decimalPlaces, roundingMode)
-{
-}
+    long double val = static_cast<long double> (floatingPointValue);
 
-inline Number::Number (
-    const long double val,
-    unsigned int decimalPlaces,
-    Rounding::Mode roundingMode
-)
-  : multPrecisionPolicy_ (defaultMultPrecisionPolicy_),
-    divPrecisionPolicy_ (defaultDivPrecisionPolicy_),
-    roundingMode_ (roundingMode),
-    decimalPlaces_ (0),
-    value64Set_ (true),
-    value64_ (0)
-{
     if (std::isnan (val))
     {
         throw fixed::BadValueException (
@@ -859,27 +833,27 @@ inline Number::Number (
     }
 
     //
-    // Note, initially use MAX_DECIMAL_PLACES, then afterwards we'll do a
-    // setDecimalPlaces to get the desired precision and rounding.
+    // Initially use MAX_DECIMAL_PLACES so we can then get the desired rounding
+    // when switching to desired decimalPlaces
     //
-    decimalPlaces_ = MAX_DECIMAL_PLACES;
-
-    initSetValue (
+    Number number (
         static_cast<uint64_t> (intPart),
-        static_cast<uint64_t> (fractPart * shiftTable64_[decimalPlaces_].value),
+        static_cast<uint64_t> (
+            fractPart * shiftTable64_[MAX_DECIMAL_PLACES].value
+        ),
         MAX_DECIMAL_PLACES,
         (val < 0.0) ? Sign::NEGATIVE : Sign::POSITIVE
     );
 
+    number.setRoundingMode (roundingMode);
+    number.setDecimalPlaces (decimalPlaces);
 
     if (minimizeDps)
     {
-        makeCompact ();
+        number.makeCompact ();
     }
-    else
-    {
-        setDecimalPlaces (decimalPlaces);
-    }
+
+    return number;
 }
 
 inline Number::Number () noexcept
