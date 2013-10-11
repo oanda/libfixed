@@ -84,17 +84,22 @@ class ShiftTable {
         unsigned int currentDecimalPlace
     ) const noexcept;
 
-    static const unsigned int MAX_DIGITS_INT64 = 18;
-    static const unsigned int MAX_DIGITS_INT128 = 38;
-
     static_assert (
         std::is_same<T, int64_t>::value || std::is_same<T, __int128_t>::value,
         "This class is only intended to work with int164 or int128"
     );
 
-    static const unsigned int MAX_DIGITS =
+    static_assert (
+        std::numeric_limits<__int128_t>::is_specialized,
+        "Need to compile with -std=c++11 -U__STRICT_ANSI__ "
+        "in order to get __int128_t type_trait and numeric_limits support"
+    );
+
+    static constexpr unsigned int MAX_DIGITS = (
         std::is_same<T, int64_t>::value ?
-            MAX_DIGITS_INT64 : MAX_DIGITS_INT128;
+            std::numeric_limits<int64_t>::digits10 :
+            std::numeric_limits<__int128_t>::digits10
+    );
 
   private:
 
