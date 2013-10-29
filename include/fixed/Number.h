@@ -194,7 +194,7 @@ class Number {
     // calling setMultPrecisionPolicy () on that instance.
     //
     static constexpr Precision::Policy DEFAULT_MULT_PRECISION_POLICY =
-        Precision::Policy::MAX_OPERAND_PLUS_2;
+        Precision::Policy::MAX_PRECISION;
 
     //
     // Policy to control how much precision is kept for the results of
@@ -209,7 +209,7 @@ class Number {
     // calling setDivPrecisionPolicy () on that instance.
     //
     static constexpr Precision::Policy DEFAULT_DIV_PRECISION_POLICY =
-        Precision::Policy::MAX_OPERAND_PLUS_2;
+        Precision::Policy::MAX_PRECISION;
 
     //
     // This is the default rounding mode that will be used when we are reducing
