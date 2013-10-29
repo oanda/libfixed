@@ -378,6 +378,18 @@ class Number {
     static Number toAbsolute (const Number& n) noexcept;
 
     //
+    // Negates the current Number (ie makes it positive if was negative, and
+    // negative if it was positive, and no effect if it was zero), keeping the
+    // value itself unchanged, simply the sign changes.
+    //
+    Number& negate () noexcept;
+
+    //
+    // Returns a new number that has the negate () function applied to it.
+    //
+    static Number negate (const Number& n) noexcept;
+
+    //
     // Return the number represented as a double and long double respectively
     //
     double toDouble () const noexcept;
@@ -724,6 +736,12 @@ bool operator>  (const Number& lhs, const Number& rhs);
 bool operator>= (const Number& lhs, const Number& rhs);
 bool operator== (const Number& lhs, const Number& rhs);
 bool operator!= (const Number& lhs, const Number& rhs);
+
+//
+// Unary minus operator, provided as a nicety, achives the same as calling
+// Number::negate (number)
+//
+Number operator- (const Number& n);
 
 template <typename T>
 T& operator<< (T& out, const Number& n);
@@ -1171,6 +1189,28 @@ inline Number Number::toAbsolute (const Number& n) noexcept
     return Number (n).toAbsolute ();
 }
 
+inline Number& Number::negate () noexcept
+{
+    if (value64Set_)
+    {
+        value64_ = -value64_;
+    }
+    else
+    {
+        value128_ = -value128_;
+    }
+
+    return *this;
+}
+
+//
+// Returns a new number that is the absolute value of the number passed in.
+//
+inline Number Number::negate (const Number& n) noexcept
+{
+    return Number (n).negate ();
+}
+
 inline double Number::toDouble () const noexcept
 {
     return toFloatingPoint<double> ();
@@ -1220,6 +1260,11 @@ inline T& operator<< (T& out, const Number& n)
     }
 
     return out;
+}
+
+inline Number operator- (const Number& n)
+{
+    return Number::negate (n);
 }
 
 } // namespace fixed

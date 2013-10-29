@@ -213,7 +213,7 @@ class ArithmeticTest {
             return true;
         }
     }
- 
+
     bool runDivByZeroTest (
         const ArithmeticOps::OpFunc& func,
         const std::string& name

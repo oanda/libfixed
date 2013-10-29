@@ -37,12 +37,14 @@ struct TestVec {
     const std::vector<Test>& tests;
 };
 
+extern std::vector<Test> NumberAbsoluteTestVec;
 extern std::vector<Test> NumberArithmeticTestVec;
 extern std::vector<Test> NumberIntConstructorFailTestVec;
 extern std::vector<Test> NumberIntConstructorTestVec;
 extern std::vector<Test> NumberFirstBitSetTestVec;
 extern std::vector<Test> NumberFpConstructorFailTestVec;
 extern std::vector<Test> NumberFpConstructorTestVec;
+extern std::vector<Test> NumberNegateTestVec;
 extern std::vector<Test> NumberRelationalTestVec;
 extern std::vector<Test> NumberRoundingTestVec;
 extern std::vector<Test> NumberSqueezeZerosTestVec;
@@ -59,7 +61,9 @@ static std::vector<TestVec> testVecs = {
     { "Integer Constructor Fail", NumberIntConstructorFailTestVec },
     { "Floating Point Constructor Fail", NumberFpConstructorFailTestVec },
     { "Arithmetic", NumberArithmeticTestVec },
-    { "Relational", NumberRelationalTestVec }
+    { "Relational", NumberRelationalTestVec },
+    { "Absolute", NumberAbsoluteTestVec },
+    { "Negate", NumberNegateTestVec }
   }
 };
 

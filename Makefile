@@ -36,11 +36,13 @@ LIB_SRC := \
 
 TEST_SRC := \
     test/FirstBitSetTests.cpp \
+    test/NumberAbsoluteTests.cpp \
     test/NumberArithmeticTests.cpp \
     test/NumberIntConstructorFailTests.cpp \
     test/NumberIntConstructorTests.cpp \
     test/NumberFpConstructorFailTests.cpp \
     test/NumberFpConstructorTests.cpp \
+    test/NumberNegateTests.cpp \
     test/NumberRelationalTests.cpp \
     test/NumberToFpTests.cpp \
     test/RoundingTests.cpp \
