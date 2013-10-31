@@ -156,7 +156,7 @@ class Number {
     static Number floatingPoint (
         const T& floatingPointValue,
         unsigned int decimalPlaces = (MAX_DECIMAL_PLACES + 1),
-        Rounding::Mode roundingMode = defaultRoundingMode_
+        Rounding::Mode roundingMode = * defaultRoundingMode ()
     );
 
     //
@@ -698,19 +698,19 @@ class Number {
         __int128_t value128_;
     };
 
-    static const FirstBitSet firstBitSet_;
+    static constexpr FirstBitSet firstBitSet_ = FirstBitSet ();
 
-    static const ShiftTable<int64_t> shiftTable64_;
+    static const ShiftTable<int64_t>& shiftTable64 ();
 
     //
-    // Only used when required, shiftTable64_ is used whenever possible by
+    // Only used when required, shiftTable64 ()  is used whenever possible by
     // the code.
     //
-    static const ShiftTable<__int128_t> shiftTable128_;
+    static const ShiftTable<__int128_t>& shiftTable128 ();
 
-    static Precision::Policy defaultMultPrecisionPolicy_;
-    static Precision::Policy defaultDivPrecisionPolicy_;
-    static Rounding::Mode    defaultRoundingMode_;
+    static Precision::Policy* defaultMultPrecisionPolicy ();
+    static Precision::Policy* defaultDivPrecisionPolicy ();
+    static Rounding::Mode* defaultRoundingMode ();
 };
 
 //
@@ -754,9 +754,9 @@ inline Number::Number (
     const unsigned int decimalPlaces,
     Sign sign
 )
-  : multPrecisionPolicy_ (defaultMultPrecisionPolicy_),
-    divPrecisionPolicy_ (defaultDivPrecisionPolicy_),
-    roundingMode_ (defaultRoundingMode_),
+  : multPrecisionPolicy_ (* defaultMultPrecisionPolicy ()),
+    divPrecisionPolicy_ (* defaultDivPrecisionPolicy ()),
+    roundingMode_ (* defaultRoundingMode ()),
     decimalPlaces_ (decimalPlaces),
     value64Set_ (true),
     value64_ (0)
@@ -858,7 +858,7 @@ inline Number Number::floatingPoint (
     Number number (
         static_cast<uint64_t> (intPart),
         static_cast<uint64_t> (
-            fractPart * shiftTable64_[MAX_DECIMAL_PLACES].value
+            fractPart * shiftTable64 () [MAX_DECIMAL_PLACES].value
         ),
         MAX_DECIMAL_PLACES,
         (val < 0.0) ? Sign::NEGATIVE : Sign::POSITIVE
@@ -876,9 +876,9 @@ inline Number Number::floatingPoint (
 }
 
 inline Number::Number () noexcept
-  : multPrecisionPolicy_ (defaultMultPrecisionPolicy_),
-    divPrecisionPolicy_ (defaultDivPrecisionPolicy_),
-    roundingMode_ (defaultRoundingMode_),
+  : multPrecisionPolicy_ (* defaultMultPrecisionPolicy ()),
+    divPrecisionPolicy_ (* defaultDivPrecisionPolicy ()),
+    roundingMode_ (* defaultRoundingMode ()),
     decimalPlaces_ (0),
     value64Set_ (true),
     value64_ (0)
@@ -914,7 +914,7 @@ bool Number::validate (
         (absoluteValue<uint64_t> (integerValue) <= MAX_INTEGER_VALUE) &&
         (decimalPlaces <= MAX_DECIMAL_PLACES) &&
         (fractionalValue <
-            static_cast<uint64_t> (shiftTable64_[decimalPlaces].value))
+            static_cast<uint64_t> (shiftTable64 () [decimalPlaces].value))
     );
 }
 
@@ -925,8 +925,10 @@ inline void Number::initSetValue (
     const Sign sign
 )
 {
-    unsigned int bitsSum =
-        firstBitSet_ (integerValue) + shiftTable64_[decimalPlaces].firstBitSet;
+    unsigned int bitsSum = (
+        firstBitSet_ (integerValue) +
+        shiftTable64 () [decimalPlaces].firstBitSet
+    );
 
     if (bitsSum > FirstBitSet::maxBitPos<int64_t> ())
     {
@@ -970,7 +972,7 @@ inline void Number::setValue (
 )
 {
     value = static_cast<T> (integerValue);
-    value *= shiftTable64_[decimalPlaces].value;
+    value *= shiftTable64 () [decimalPlaces].value;
     value += fractionalValue;
 
     if (sign == Sign::NEGATIVE)
@@ -993,7 +995,7 @@ inline uint64_t Number::integerValue (
     const unsigned int decimalPlaces
 ) noexcept
 {
-    T intVal = val / shiftTable64_[decimalPlaces].value;
+    T intVal = val / shiftTable64 () [decimalPlaces].value;
 
     //
     // Even for the case when T is int128, the casts to uint64_t below will
@@ -1025,7 +1027,9 @@ inline uint64_t Number::fractionalValue (const T& val) const noexcept
     //
     return (
         fixed::absoluteValue<uint64_t> (
-            static_cast<int64_t> (val % shiftTable64_[decimalPlaces ()].value)
+            static_cast<int64_t> (
+                val % shiftTable64 () [decimalPlaces ()].value
+            )
         )
     );
 }
@@ -1086,24 +1090,24 @@ unsigned int Number::squeezeZeros (
     int idx = 0;
     unsigned int numSqueezed = 0;
 
-    while ((shiftTable64_[idx + 1].decimalPlaces <= maxSqueeze) &&
-           ((val % shiftTable64_[idx + 1].value) == 0))
+    while ((shiftTable64 () [idx + 1].decimalPlaces <= maxSqueeze) &&
+           ((val % shiftTable64 () [idx + 1].value) == 0))
     {
         idx++;
 
         if (idx == MAX_DECIMAL_PLACES)
         {
-            val /= shiftTable64_[MAX_DECIMAL_PLACES].value;
-            numSqueezed += shiftTable64_[MAX_DECIMAL_PLACES].decimalPlaces;
-            maxSqueeze -= shiftTable64_[MAX_DECIMAL_PLACES].decimalPlaces;
+            val /= shiftTable64 () [MAX_DECIMAL_PLACES].value;
+            numSqueezed += shiftTable64 () [MAX_DECIMAL_PLACES].decimalPlaces;
+            maxSqueeze -= shiftTable64 () [MAX_DECIMAL_PLACES].decimalPlaces;
             idx = 0;
         }
     }
 
     if (idx)
     {
-        val /= shiftTable64_[idx].value;
-        numSqueezed += shiftTable64_[idx].decimalPlaces;
+        val /= shiftTable64 () [idx].value;
+        numSqueezed += shiftTable64 () [idx].decimalPlaces;
     }
 
     return numSqueezed;
@@ -1128,14 +1132,14 @@ inline void Number::setDefaultMultPrecisionPolicy (
     const Precision::Policy& policy
 ) noexcept
 {
-    defaultMultPrecisionPolicy_ = policy;
+    * defaultMultPrecisionPolicy () = policy;
 }
 
 inline void Number::setDefaultDivPrecisionPolicy (
     const Precision::Policy& policy
 ) noexcept
 {
-    defaultDivPrecisionPolicy_ = policy;
+    * defaultDivPrecisionPolicy () = policy;
 }
 
 inline void Number::setMultPrecisionPolicy (
@@ -1156,7 +1160,7 @@ inline void Number::setDefaultRoundingMode (
     const Rounding::Mode& mode
 ) noexcept
 {
-    defaultRoundingMode_ = mode;
+    * defaultRoundingMode () = mode;
 }
 
 inline void Number::setRoundingMode (const Rounding::Mode& mode) noexcept
@@ -1233,7 +1237,7 @@ template <typename T> inline T Number::toFloatingPoint () const noexcept
 
     val += (
         static_cast<T> (fractionalValue ()) /
-        static_cast<T> (shiftTable64_[decimalPlaces ()].value)
+        static_cast<T> (shiftTable64 () [decimalPlaces ()].value)
     );
 
     return isNegative () ? - val : val;

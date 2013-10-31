@@ -34,20 +34,6 @@
 
 namespace fixed {
 
-const FirstBitSet Number::firstBitSet_;
-
-const ShiftTable<int64_t> Number::shiftTable64_ (MAX_INTEGER_VALUE);
-
-const ShiftTable<__int128_t> Number::shiftTable128_ (MAX_INTEGER_VALUE);
-
-Precision::Policy Number::defaultMultPrecisionPolicy_ =
-    Number::DEFAULT_MULT_PRECISION_POLICY;
-
-Precision::Policy Number::defaultDivPrecisionPolicy_ =
-    Number::DEFAULT_DIV_PRECISION_POLICY;
-
-Rounding::Mode Number::defaultRoundingMode_ = DEFAULT_ROUNDING_MODE;
-
 //
 // Notes on the static check on fundamentalAssumptions and on
 // MAX_DECIMAL_PLACES and MAX_INTEGER_VALUE.  Parts of the code were written
@@ -82,11 +68,11 @@ Rounding::Mode Number::defaultRoundingMode_ = DEFAULT_ROUNDING_MODE;
 //
 // MAX_DECIMAL_PLACES check on ShiftTable<int64>::MAX_DIGITS is because there's
 // an assumption that all decimal places <= MAX_DECIMAL_PLACES can be used to
-// index into shiftTable64_
+// index into shiftTable64 ()
 //
 // The 2 * MAX_DECIMAL_PLACES <= ShiftTable<int128_t>::MAX_DIGITS is because
 // the worst case decimal places for the result of a multiplication is 2 *
-// MAX_DECIMAL_PLACES, and we need to ensure we can index into shiftTable128_
+// MAX_DECIMAL_PLACES, and we need to ensure we can index into shiftTable128 ()
 // with this.
 //
 static constexpr bool fundamentalAssumptions ()
@@ -103,7 +89,8 @@ static constexpr bool fundamentalAssumptions ()
         )
         &&
         (
-            2 * Number::MAX_DECIMAL_PLACES <= ShiftTable<__int128_t>::MAX_DIGITS
+            2 * Number::MAX_DECIMAL_PLACES <=
+                ShiftTable<__int128_t>::MAX_DIGITS
         )
     );
 }
@@ -115,9 +102,9 @@ static_assert (
 );
 
 Number::Number (const char* numberCStr)
-  : multPrecisionPolicy_ (defaultMultPrecisionPolicy_),
-    divPrecisionPolicy_ (defaultDivPrecisionPolicy_),
-    roundingMode_ (defaultRoundingMode_),
+  : multPrecisionPolicy_ (* defaultMultPrecisionPolicy ()),
+    divPrecisionPolicy_ (* defaultDivPrecisionPolicy ()),
+    roundingMode_ (* defaultRoundingMode ()),
     decimalPlaces_ (0),
     value64Set_ (true),
     value64_ (0)
@@ -268,7 +255,7 @@ void Number::upsizeTo128 () noexcept
 // to potentially reduce the decimalPlaces_.  It's possible the value of
 // decimalPlaces_ when this gets called is actually greater than
 // MAX_DECIMAL_PLACES.  Something to keep in mind, and to ensure we
-// don't use decimalPlaces_ to directly index shiftTable64_.
+// don't use decimalPlaces_ to directly index shiftTable64 ().
 //
 void Number::setDecimalPlaces (const unsigned int targetDecimalPlaces)
 {
@@ -325,7 +312,7 @@ void Number::increaseDecimalPlaces64 (
     else
     {
         value64_ *=
-            shiftTable64_[targetDecimalPlaces - decimalPlaces ()].value;
+            shiftTable64 () [targetDecimalPlaces - decimalPlaces ()].value;
     }
 }
 
@@ -347,7 +334,8 @@ void Number::increaseDecimalPlaces128 (
 
     assert (targetDecimalPlaces <= MAX_DECIMAL_PLACES);
 
-    value128_ *= shiftTable128_[targetDecimalPlaces - decimalPlaces ()].value;
+    value128_ *=
+        shiftTable128 () [targetDecimalPlaces - decimalPlaces ()].value;
 }
 
 template <typename T>
@@ -358,7 +346,7 @@ unsigned int Number::increaseDecimalPlacesBitCount (
 {
     return (
         firstBitSet_ (val) +
-        shiftTable64_[targetDecimalPlaces - decimalPlaces ()].firstBitSet
+        shiftTable64 () [targetDecimalPlaces - decimalPlaces ()].firstBitSet
     );
 }
 
@@ -374,13 +362,14 @@ void Number::decreaseDecimalPlaces64 (
     // the desired target number of decimal places, which calls this to
     // carry that out.
     //
-    if ((decimalPlaces () - targetDecimalPlaces) > shiftTable64_.MAX_DIGITS)
+    if ((decimalPlaces () - targetDecimalPlaces) > shiftTable64 () .MAX_DIGITS)
     {
         upsizeTo128 ();
         return decreaseDecimalPlaces128 (targetDecimalPlaces);
     }
 
-    const auto& sval = shiftTable64_[decimalPlaces () - targetDecimalPlaces];
+    const auto& sval =
+        shiftTable64 () [decimalPlaces () - targetDecimalPlaces];
 
     //
     // The use of absoluteValue<int64_t> below requires that
@@ -419,7 +408,8 @@ void Number::decreaseDecimalPlaces128 (
         "decreaseDecimalPlaces128 relies on the fundamental assumptions"
     );
 
-    const auto& sval = shiftTable128_[decimalPlaces () - targetDecimalPlaces];
+    const auto& sval =
+        shiftTable128 () [decimalPlaces () - targetDecimalPlaces];
 
     __int128_t origVal = value128_;
     unsigned int origDecimalPlaces = decimalPlaces ();
@@ -766,7 +756,7 @@ void Number::multReducePrecision (
     // multiplication the least.
     //
     unsigned int dpExcess =
-        shiftTable128_.find_if (
+        shiftTable128 ().find_if (
             [&] (const ShiftTable<__int128_t>::ShiftValue& sv) {
                 return excessBits <= sv.firstBitSet;
             }
@@ -782,12 +772,12 @@ void Number::multReducePrecision (
     }
 
     unsigned int n1Idop =
-        shiftTable128_.integerDigitsOfPrecision (
+        shiftTable128 ().integerDigitsOfPrecision (
             n1.value128_, n1.decimalPlaces ()
         );
 
     unsigned int n2Idop =
-        shiftTable128_.integerDigitsOfPrecision (
+        shiftTable128 ().integerDigitsOfPrecision (
             n2.value128_, n2.decimalPlaces ()
         );
 
@@ -977,8 +967,8 @@ void Number::div64 (
         FirstBitSet::maxBitPos<int64_t> () - firstBitSet_ (value64_);
 
     const bool need128 =
-        (rds > shiftTable64_.MAX_DIGITS) ||
-        (shiftRoom < shiftTable64_[rds].firstBitSet);
+        (rds > shiftTable64 ().MAX_DIGITS) ||
+        (shiftRoom < shiftTable64 () [rds].firstBitSet);
 
     if (need128)
     {
@@ -990,7 +980,7 @@ void Number::div64 (
         );
     }
 
-    value64_ = value64_ * shiftTable64_[rds].value / rhs.value64_;
+    value64_ = value64_ * shiftTable64 () [rds].value / rhs.value64_;
 }
 
 void Number::div128 (
@@ -1008,15 +998,15 @@ void Number::div128 (
     // and divisor can lead to a requiredDividendShift that would index
     // out of the range of the 128bit shift table.
     //
-    assert (requiredDividendShift <= shiftTable128_.MAX_DIGITS);
+    assert (requiredDividendShift <= shiftTable128 ().MAX_DIGITS);
 
     const auto shiftRoom =
         FirstBitSet::maxBitPos<__int128_t> () - firstBitSet_ (value128_);
 
-    if (shiftRoom >= shiftTable128_[requiredDividendShift].firstBitSet)
+    if (shiftRoom >= shiftTable128 () [requiredDividendShift].firstBitSet)
     {
         value128_ =
-            value128_ * shiftTable128_[requiredDividendShift].value /
+            value128_ * shiftTable128 () [requiredDividendShift].value /
             rhs.value128_;
 
         return;
@@ -1029,7 +1019,7 @@ void Number::div128 (
     Number divisor (rhs);
 
     const auto& sv =
-        shiftTable128_.find_if_not (
+        shiftTable128 ().find_if_not (
             [&] (const ShiftTable<__int128_t>::ShiftValue& sv) {
                 return shiftRoom >= sv.firstBitSet;
             }
@@ -1040,7 +1030,7 @@ void Number::div128 (
     //
     if (sv.decimalPlaces > 0)
     {
-        value128_ *= shiftTable128_[sv.decimalPlaces - 1].value;
+        value128_ *= shiftTable128 () [sv.decimalPlaces - 1].value;
         requiredDividendShift -= sv.decimalPlaces - 1;
     }
 
@@ -1414,11 +1404,48 @@ bool Number::integerValueOverflowCheck (
     unsigned int decimalPlaces
 )
 {
-    const auto& sval = shiftTable128_[decimalPlaces];
+    const auto& sval = shiftTable128 () [decimalPlaces];
 
     return isNegative (value) ?
             value < sval.integerOverflowCheckValNeg :
             value > sval.integerOverflowCheckValPos;
+}
+
+const ShiftTable<int64_t>& Number::shiftTable64 ()
+{
+    static const ShiftTable<int64_t>* table =
+        new ShiftTable<int64_t> (MAX_INTEGER_VALUE);
+
+    return * table;
+}
+
+const ShiftTable<__int128_t>& Number::shiftTable128 ()
+{
+    static const ShiftTable<__int128_t>* table =
+        new ShiftTable<__int128_t> (MAX_INTEGER_VALUE);
+
+    return * table;
+}
+
+Precision::Policy* Number::defaultMultPrecisionPolicy ()
+{
+    static Precision::Policy policy = DEFAULT_MULT_PRECISION_POLICY;
+
+    return & policy;
+}
+
+Precision::Policy* Number::defaultDivPrecisionPolicy ()
+{
+    static Precision::Policy policy = DEFAULT_DIV_PRECISION_POLICY;
+
+    return & policy;
+}
+
+Rounding::Mode* Number::defaultRoundingMode ()
+{
+    static Rounding::Mode mode = DEFAULT_ROUNDING_MODE;
+
+    return & mode;
 }
 
 } // namespace fixed
