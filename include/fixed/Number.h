@@ -160,7 +160,8 @@ class Number {
     );
 
     //
-    // The default constructor can't throw an exception.
+    // The default constructor can't throw an exception, constructs a value
+    // of 0, with 0 decimal places.
     //
     Number () noexcept;
 
@@ -875,7 +876,12 @@ inline Number Number::floatingPoint (
 }
 
 inline Number::Number () noexcept
-  : Number (0)
+  : multPrecisionPolicy_ (defaultMultPrecisionPolicy_),
+    divPrecisionPolicy_ (defaultDivPrecisionPolicy_),
+    roundingMode_ (defaultRoundingMode_),
+    decimalPlaces_ (0),
+    value64Set_ (true),
+    value64_ (0)
 {
 }
 
