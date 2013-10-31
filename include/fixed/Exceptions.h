@@ -31,31 +31,41 @@
 
 namespace fixed {
 
-class OverflowException : public std::runtime_error
+class Exception : public std::runtime_error
+{
+  public:
+    Exception (const std::string& msg)
+      : std::runtime_error ("fixed::Exception::" + msg)
+    {}
+
+    virtual ~Exception () noexcept {}
+};
+
+class OverflowException : public fixed::Exception
 {
   public:
     OverflowException (const std::string& msg)
-      : std::runtime_error ("OverflowException: " + msg)
+      : Exception ("Overflow: " + msg)
     {}
 
     virtual ~OverflowException () noexcept {}
 };
 
-class DivideByZeroException : public std::runtime_error
+class DivideByZeroException : public fixed::Exception
 {
   public:
     DivideByZeroException (const std::string& msg)
-      : std::runtime_error ("DivideByZeroException: " + msg)
+      : Exception ("DivideByZero: " + msg)
     {}
 
     virtual ~DivideByZeroException () noexcept {}
 };
 
-class BadValueException : public std::runtime_error
+class BadValueException : public fixed::Exception
 {
   public:
     BadValueException (const std::string& msg)
-      : std::runtime_error ("BadValueException: " + msg)
+      : Exception ("BadValue: " + msg)
     {}
 
     virtual ~BadValueException () noexcept {}
