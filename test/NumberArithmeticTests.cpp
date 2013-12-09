@@ -50,9 +50,8 @@ struct ArithmeticOps {
         MOD
     };
 
-    typedef std::function<
-        Number (const std::string& op1, const std::string& op2)
-    > OpFunc;
+    using OpFunc =
+        std::function<Number (const std::string& op1, const std::string& op2)>;
 
     std::string name;
     OpFunc binary;

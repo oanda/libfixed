@@ -35,9 +35,8 @@ namespace fixed {
 namespace test {
 
 struct RelationalOps {
-    typedef std::function<
-        bool (const std::string& op1, const std::string& op2)
-    > OpFunc;
+    using OpFunc =
+        std::function<bool (const std::string& op1, const std::string& op2)>;
 
     std::string name;
     std::string mirrorOpName;

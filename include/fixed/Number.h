@@ -550,27 +550,23 @@ class Number {
     void decreaseDecimalPlaces64 (unsigned int targetDecimalPlaces) noexcept;
     void decreaseDecimalPlaces128 (unsigned int targetDecimalPlaces) noexcept;
 
-    typedef std::function<
-        int64_t (const int64_t& v1, const int64_t& v2)
-    > AddSubOperation64;
+    using AddSubOperation64 =
+        std::function<int64_t (const int64_t& v1, const int64_t& v2)>;
 
-    typedef std::function<
-        __int128_t (const __int128_t& v1, const __int128_t& v2)
-    > AddSubOperation128;
+    using AddSubOperation128 =
+        std::function<__int128_t (const __int128_t& v1, const __int128_t& v2)>;
 
     Number& addSub (
         const Number& rhs,
-        AddSubOperation64 arithop64,
-        AddSubOperation128 arithop128
+        const AddSubOperation64& arithop64,
+        const AddSubOperation128& arithop128
     );
 
-    typedef std::function<
-        bool (const int64_t& v1, const int64_t& v2)
-    > RelationalOperation64;
+    using RelationalOperation64 =
+        std::function<bool (const int64_t& v1, const int64_t& v2)>;
 
-    typedef std::function<
-        bool (const __int128_t& v1, const __int128_t& v2)
-    > RelationalOperation128;
+    using RelationalOperation128 =
+        std::function<bool (const __int128_t& v1, const __int128_t& v2)>;
 
     //
     // Only to be called if the decimal places of the two Numbers are equal
@@ -578,15 +574,15 @@ class Number {
     static bool relationalValuesCmp (
         const Number& lhs,
         const Number& rhs,
-        RelationalOperation64 relop64,
-        RelationalOperation128 relop128
+        const RelationalOperation64& relop64,
+        const RelationalOperation128& relop128
     ) noexcept;
 
     static bool relationalOperation (
         const Number& lhs,
         const Number& rhs,
-        RelationalOperation64 relop64,
-        RelationalOperation128 relop128
+        const RelationalOperation64& relop64,
+        const RelationalOperation128& relop128
     ) noexcept;
 
     //

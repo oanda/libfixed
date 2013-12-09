@@ -486,8 +486,8 @@ Number& Number::operator-= (const Number& rhs)
 //
 Number& Number::addSub (
     const Number& rhs,
-    AddSubOperation64 arithop64,
-    AddSubOperation128 arithop128
+    const AddSubOperation64& arithop64,
+    const AddSubOperation128& arithop128
 )
 {
     Number rhsCopy (rhs);
@@ -1184,8 +1184,8 @@ void Number::remainderEqualDecimalPlaces (const Number& rhs) noexcept
 bool Number::relationalOperation (
     const Number& lhs,
     const Number& rhs,
-    RelationalOperation64 relop64,
-    RelationalOperation128 relop128
+    const RelationalOperation64& relop64,
+    const RelationalOperation128& relop128
 ) noexcept
 {
     bool retval = false;
@@ -1243,8 +1243,8 @@ bool operator>= (const Number& lhs, const Number& rhs)
 bool Number::relationalValuesCmp (
     const Number& lhs,
     const Number& rhs,
-    RelationalOperation64 relop64,
-    RelationalOperation128 relop128
+    const RelationalOperation64& relop64,
+    const RelationalOperation128& relop128
 ) noexcept
 {
     if (lhs.value64Set_ && rhs.value64Set_)
