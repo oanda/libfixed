@@ -11,7 +11,7 @@ Linux x86 64bit
 
 gcc 4.8.1
 
-Required compile flags -std=c++11 -U__STRICT_ANSI__
+Required compile flags -std=gnu++11.
 
 ## BUILDING
 

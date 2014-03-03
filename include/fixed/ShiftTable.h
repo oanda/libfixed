@@ -91,8 +91,8 @@ class ShiftTable {
 
     static_assert (
         std::numeric_limits<__int128_t>::is_specialized,
-        "Need to compile with -std=c++11 -U__STRICT_ANSI__ "
-        "in order to get __int128_t type_trait and numeric_limits support"
+        "Need to compile with -std=gnu++11 in order to get __int128_t "
+        "type_trait and numeric_limits support."
     );
 
     static constexpr unsigned int MAX_DIGITS = (
