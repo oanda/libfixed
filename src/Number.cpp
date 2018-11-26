@@ -437,7 +437,16 @@ void Number::decreaseDecimalPlaces128 (
     // Also note, we don't have to do this check for the value64 case, due
     // to the fundamental assumptions this corner case can't hit in that mode.
     //
-    if (integerValueOverflowCheck (value128_, targetDecimalPlaces))
+    // Note the extra check on origDecimalPlaces and MAX_DECIMAL_PLACES.  This
+    // is needed because this code path is also used by the internal
+    // computations to get the number of decimal places to where they should
+    // be after a multiplication say.  In this case origDecimalPlaces may be
+    // larger than our max, and integerValue can't be called in this case.
+    // setDecimalPlaces would only ever be called with a proper value of
+    // decimalPlaces that would be <= MAX_DECIMAL_PLACES.
+    //
+    if (integerValueOverflowCheck (value128_, targetDecimalPlaces) &&
+        (origDecimalPlaces <= MAX_DECIMAL_PLACES))
     {
          __int128_t origIntValAbs =
             absoluteValue<__int128_t> (

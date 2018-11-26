@@ -761,6 +761,11 @@ std::vector<Test> NumberArithmeticTestVec = {
     ),
 
     CREATE_MULT_TEST_OVERFLOW (
+        "5533100884909180006.12345678901234",
+        "1.8123456"
+    ),
+
+    CREATE_MULT_TEST_OVERFLOW (
         "67064137295.3264342053",
         "12234902340980023.123"
     ),
