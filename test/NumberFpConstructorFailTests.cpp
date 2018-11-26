@@ -52,7 +52,7 @@ class ConstructorFailTest {
 
             return false;
         }
-        catch (const fixed::BadValueException)
+        catch (const fixed::BadValueException&)
         {
         }
 

@@ -55,9 +55,13 @@ class ConstructorTest {
         doIntConstructor_ (false)
     {
         if (std::is_same<T, int64_t>::value &&
-            (intVal == std::numeric_limits<int64_t>::min ()))
+            // Cast done here to avoid compiler warning
+            // Technically this is not an issue as the previous statement validates type
+            (static_cast<int64_t> (intVal) == std::numeric_limits<int64_t>::min ()))
         {
-            expectedIntVal_ = std::numeric_limits<int64_t>::max () + 1;
+            expectedIntVal_ = static_cast<uint64_t> (
+                std::numeric_limits<int64_t>::max ()
+            ) + 1;
             expectedNegative_ = true;
         }
         else if (std::is_signed<T>::value && (intVal < 0))

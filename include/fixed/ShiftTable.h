@@ -209,7 +209,7 @@ T ShiftTable<T>::ShiftValue::computePow10 (unsigned int exp)
 {
     T val = 1;
 
-    for (int i = 0; i < exp; ++i)
+    for (unsigned int i = 0; i < exp; ++i)
     {
         val *= 10;
     }
