@@ -568,25 +568,22 @@ template <typename T> T Number::addition (const T& v1, const T& v2)
         "Expecting int64_t or int128_t"
     );
 
-    T result = v1 + v2;
-
-    //
-    // Note, for the 128bit case we don't need to check for overflow, since
-    // if the fundamentalAssuptions () hold (checked above), there can't be
-    // actual math overflow at this level, there are excess bits to hold the
-    // result.  However for the 64bit case it's possible we need to overflow
-    // into a 128 bit result.
-    //
-    if (std::is_same<T, int64_t>::value && (
-        (isPositive (v1) && isPositive (v2) && isNegative (result)) ||
-        (isNegative (v1) && isNegative (v2) && isPositive (result))
-      )
-    )
+    if (isPositive (v1) && isPositive (v2))
     {
-        throw fixed::OverflowException ("Internal 64bit addition overflow");
+        if ((std::numeric_limits <T>::max () - v1) < v2)
+        {
+            throw fixed::OverflowException ("Internal 64bit addition overflow");
+        }
+    }
+    else if (isNegative (v1) && isNegative (v2))
+    {
+        if ((std::numeric_limits <T>::min () - v1) > v2)
+        {
+            throw fixed::OverflowException ("Internal 64bit addition overflow");
+        }
     }
 
-    return result;
+    return v1 + v2;
 }
 
 template <typename T> T Number::subtraction (const T& v1, const T& v2)
@@ -601,25 +598,22 @@ template <typename T> T Number::subtraction (const T& v1, const T& v2)
         "Expecting int64_t or int128_t"
     );
 
-    T result = v1 - v2;
-
-    //
-    // Note, for the 128bit case we don't need to check for overflow, since
-    // if the fundamentalAssuptions () hold (checked above), there can't be
-    // actual math overflow at this level, there are extra bits to hold the
-    // result.  However for the 64bit case it's possible we need to overflow
-    // into a 128 bit result.
-    //
-    if (std::is_same<T, int64_t>::value && (
-        (isPositive (v1) && isNegative (v2) && isNegative (result)) ||
-        (isNegative (v1) && isPositive (v2) && isPositive (result))
-      )
-    )
+    if ((isPositive (v1) || isZero (v1)) && isNegative (v2))
     {
-        throw fixed::OverflowException ("Internal 64bit subtraction overflow");
+        if ((std::numeric_limits <T>::max () + v2) < v1)
+        {
+            throw fixed::OverflowException ("Internal 64bit subtraction overflow");
+        }
+    }
+    else if (isNegative (v1) && isPositive (v2))
+    {
+        if ((std::numeric_limits <T>::min () + v2) > v1)
+        {
+            throw fixed::OverflowException ("Internal 64bit subtraction overflow");
+        }
     }
 
-    return result;
+    return v1 - v2;
 }
 
 Number& Number::operator*= (const Number& rhs)
